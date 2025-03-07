@@ -10,7 +10,8 @@
   <h1>Leitor de QR Code</h1>
 
   <video id="preview" width="100%" height="auto" style="border: 1px solid black;"></video>
-  
+  <p id="error-message" style="color: red; display: none;">Câmera não encontrada ou permissão negada.</p>
+
   <script type="text/javascript">
     let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
 
@@ -23,12 +24,28 @@
 
     Instascan.Camera.getCameras().then(function(cameras) {
       if (cameras.length > 0) {
-        scanner.start(cameras[0]);
+        // Tenta usar a câmera traseira (geralmente a segunda na lista)
+        let rearCamera = cameras.find(camera => !camera.name.toLowerCase().includes("front"));
+        
+        if (rearCamera) {
+          // Inicia a câmera traseira
+          scanner.start(rearCamera).catch(function(e) {
+            console.error('Erro ao iniciar o scanner:', e);
+          });
+        } else {
+          // Se não encontrar uma câmera traseira, tenta usar a primeira disponível
+          scanner.start(cameras[0]).catch(function(e) {
+            console.error('Erro ao iniciar o scanner:', e);
+          });
+        }
       } else {
-        console.error('Câmera não encontrada.');
+        // Caso não encontre nenhuma câmera
+        document.getElementById('error-message').style.display = 'block';
       }
     }).catch(function(e) {
       console.error(e);
+      // Exibe uma mensagem de erro se houver falha ao acessar as câmeras
+      document.getElementById('error-message').style.display = 'block';
     });
   </script>
 </body>
