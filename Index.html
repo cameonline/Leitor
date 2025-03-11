@@ -3,160 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leitor de QR Code</title>
+    <title>Calculadora de Preço de Venda</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
+            margin: 0;
             padding: 20px;
+            background-color: #f4f4f4;
         }
-
-        #videoElement {
-            width: 100%;
-            height: auto;
-            border: 2px solid #000;
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-
         h1 {
+            text-align: center;
             margin-bottom: 20px;
         }
-
-        p {
-            color: #555;
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            text-align: center;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: white;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <h1>Calculadora de Preço de Venda</h1>
+        <div class="form-group">
+            <label for="custoMateriaPrima">Custo da Matéria-Prima (R$):</label>
+            <input type="number" id="custoMateriaPrima" placeholder="Digite o custo da matéria-prima">
+        </div>
+        <div class="form-group">
+            <label for="custoMaoObra">Custo da Mão de Obra (R$):</label>
+            <input type="number" id="custoMaoObra" placeholder="Digite o custo da mão de obra">
+        </div>
+        <div class="form-group">
+            <label for="custoEmbalagem">Custo da Embalagem (R$):</label>
+            <input type="number" id="custoEmbalagem" placeholder="Digite o custo da embalagem">
+        </div>
+        <div class="form-group">
+            <label for="outrosCustos">Outros Custos (R$):</label>
+            <input type="number" id="outrosCustos" placeholder="Digite outros custos">
+        </div>
+        <div class="form-group">
+            <label for="margemLucro">Margem de Lucro (%):</label>
+            <input type="number" id="margemLucro" placeholder="Digite a margem de lucro">
+        </div>
+        <div class="form-group">
+            <label for="impostosTaxas">Impostos e Taxas (%):</label>
+            <input type="number" id="impostosTaxas" placeholder="Digite os impostos e taxas">
+        </div>
+        <button class="btn" onclick="calcularPrecoVenda()">Calcular Preço de Venda</button>
+        <div id="resultado" class="result"></div>
+    </div>
 
-    <h1>Escaneie o QR Code</h1>
-    <p>Apontando a câmera para um QR Code.</p>
-    <video id="videoElement" autoplay></video>
-
-    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
     <script>
-        // Função para acessar a câmera e escanear o QR Code
-        async function startCamera() {
-            try {
-                // Acessa a câmera
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('videoElement');
-                video.srcObject = stream;
+        function calcularPrecoVenda() {
+            // Obtendo os valores dos inputs
+            var custoMateriaPrima = parseFloat(document.getElementById('custoMateriaPrima').value);
+            var custoMaoObra = parseFloat(document.getElementById('custoMaoObra').value);
+            var custoEmbalagem = parseFloat(document.getElementById('custoEmbalagem').value);
+            var outrosCustos = parseFloat(document.getElementById('outrosCustos').value);
+            var margemLucro = parseFloat(document.getElementById('margemLucro').value) / 100;
+            var impostosTaxas = parseFloat(document.getElementById('impostosTaxas').value) / 100;
 
-                // Cria o canvas para desenhar os frames da câmera
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-
-                // A cada frame do vídeo, tenta escanear o QR Code
-                video.addEventListener('play', function () {
-                    setInterval(() => {
-                        if (video.paused || video.ended) return;
-
-                        // Desenha o frame atual da câmera no canvas
-                        canvas.height = video.videoHeight;
-                        canvas.width = video.videoWidth;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                        // Captura os dados da imagem no canvas
-                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                        
-                        // Tenta detectar o QR code na imagem
-                        const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
-
-                        if (qrCode) {
-                            // Se encontrar um QR code, abre o link em uma nova guia anônima
-                            window.open(qrCode.data, '_blank', 'noopener,noreferrer');
-                        }
-                    }, 100);  // Verifica a cada 100ms
-                });
-            } catch (err) {
-                alert('Erro ao acessar a câmera: ' + err.message);
+            // Verificando se os campos estão preenchidos
+            if (isNaN(custoMateriaPrima) || isNaN(custoMaoObra) || isNaN(custoEmbalagem) || isNaN(outrosCustos) || isNaN(margemLucro) || isNaN(impostosTaxas)) {
+                document.getElementById('resultado').innerHTML = "<p style='color: red;'>Por favor, preencha todos os campos corretamente.</p>";
+                return;
             }
-        }
 
-        // Iniciar a câmera quando a página carregar
-        startCamera();
+            // Cálculo do custo total
+            var custoTotal = custoMateriaPrima + custoMaoObra + custoEmbalagem + outrosCustos;
+
+            // Cálculo do preço de venda
+            var precoVenda = (custoTotal * (1 + margemLucro)) * (1 + impostosTaxas);
+
+            // Exibindo o resultado
+            document.getElementById('resultado').innerHTML = `
+                <p><strong>Custo total de produção:</strong> R$ ${custoTotal.toFixed(2)}</p>
+                <p><strong>Preço de venda sugerido:</strong> R$ ${precoVenda.toFixed(2)}</p>
+            `;
+        }
     </script>
-
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leitor de QR Code</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
-        }
-
-        #videoElement {
-            width: 100%;
-            height: auto;
-            border: 2px solid #000;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-        }
-
-        p {
-            color: #555;
-        }
-    </style>
-</head>
-<body>
-
-    <h1>Escaneie o QR Code</h1>
-    <p>Apontando a câmera para um QR Code.</p>
-    <video id="videoElement" autoplay></video>
-
-    <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
-    <script>
-        // Função para acessar a câmera e escanear o QR Code
-        async function startCamera() {
-            try {
-                // Acessa a câmera
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                const video = document.getElementById('videoElement');
-                video.srcObject = stream;
-
-                // Cria o canvas para desenhar os frames da câmera
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d');
-
-                // A cada frame do vídeo, tenta escanear o QR Code
-                video.addEventListener('play', function () {
-                    setInterval(() => {
-                        if (video.paused || video.ended) return;
-
-                        // Desenha o frame atual da câmera no canvas
-                        canvas.height = video.videoHeight;
-                        canvas.width = video.videoWidth;
-                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                        // Captura os dados da imagem no canvas
-                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-                        
-                        // Tenta detectar o QR code na imagem
-                        const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
-
-                        if (qrCode) {
-                            // Se encontrar um QR code, abre o link em uma nova guia anônima
-                            window.open(qrCode.data, '_blank', 'noopener,noreferrer');
-                        }
-                    }, 100);  // Verifica a cada 100ms
-                });
-            } catch (err) {
-                alert('Erro ao acessar a câmera: ' + err.message);
-            }
-        }
-
-        // Iniciar a câmera quando a página carregar
-        startCamera();
-    </script>
-
 </body>
 </html>
